@@ -1,7 +1,7 @@
 # iFrame Resizer
-[![Bower version](https://badge.fury.io/bo/iframe-resizer.svg)](http://badge.fury.io/bo/iframe-resizer)
 [![NPM version](https://badge.fury.io/js/iframe-resizer.svg)](http://badge.fury.io/js/iframe-resizer)
-[![Build Status](https://travis-ci.org/davidjbradshaw/iframe-resizer.png?branch=master)](https://travis-ci.org/davidjbradshaw/iframe-resizer)
+[![Bower version](https://badge.fury.io/bo/iframe-resizer.svg)](http://badge.fury.io/bo/iframe-resizer)
+[![Build Status](https://travis-ci.org/davidjbradshaw/iframe-resizer.svg?branch=master)](https://travis-ci.org/davidjbradshaw/iframe-resizer)
 [![Coverage Status](https://coveralls.io/repos/davidjbradshaw/iframe-resizer/badge.svg?branch=master&service=github)](https://coveralls.io/github/davidjbradshaw/iframe-resizer)
 
 This library enables the automatic resizing of the height and width of both same and cross domain iFrames to fit their contained content. It provides a range of features to address the most common issues with using iFrames, these include:
@@ -18,6 +18,10 @@ This library enables the automatic resizing of the height and width of both same
 * Exposes parent position and viewport size to the iFrame.
 * Works with [ViewerJS](http://viewerjs.org/) to support PDF and ODF documents.
 * Fallback support down to IE8.
+
+### Install
+
+This package can be installed via NPM (`npm install iframe-resizer -save`) or Bower (`bower install iframe-resizer`).
 
 ### Getting started
 The package contains two minified JavaScript files in the [js](js) folder. The first ([iframeResizer.min.js](https://raw.githubusercontent.com/davidjbradshaw/iframe-resizer/master/js/iframeResizer.min.js)) is for the page hosting the iFrames. It can be called with **native** JavaScript;
@@ -137,6 +141,8 @@ iFrameResize( {
 });
 ```
 
+Alternatively it is possible to add your own custom sizing method directly inside the iFrame, see [iFrame Page Options](https://github.com/davidjbradshaw/iframe-resizer#iframe-page-options) section below.
+
 <sup> † </sup> <i>The **lowestElement** option is the most reliable way of determining the page height. However, it does have a performance impact in older versions of IE. In one screen refresh (16ms) Chrome can calculate the position of around 10,000 html nodes, whereas IE 8 can calculate approximately 50. The **taggedElement** option provides much greater performance by limiting the number of elements that need their position checked.</i>
 
 <sup> * </sup><i>The **bodyScroll**, **documentElementScroll**, **max** and **min** options can cause screen flicker and will prevent the [interval](#interval) trigger downsizing the iFrame when the content shrinks. This is mainly an issue in IE 10 and below, where the [mutationObserver](https://developer.mozilla.org/en/docs/Web/API/MutationObserver) event is not supported. To overcome this you need to manually trigger a page resize by calling the [parentIFrame.size()](#size-customheight-customwidth) method when you remove content from the page.</i>
@@ -200,7 +206,7 @@ Set the number of pixels the iFrame content size has to change by, before trigge
 
 By default the width of the page is worked out by taking the greater of the **documentElement** and **body** scrollWidth values.
 
-Some CSS technics may require you to change this setting to one of the following options. Each can give different values depending on how CSS is used in the page and each has varying side-effects. You will need to experiment to see which is best for any particular circumstance.
+Some CSS techniques may require you to change this setting to one of the following options. Each can give different values depending on how CSS is used in the page and each has varying side-effects. You will need to experiment to see which is best for any particular circumstance.
 
 * **bodyOffset** uses `document.body.offsetWidth`
 * **bodyScroll** uses `document.body.scrollWidth` <sup>*</sup>
@@ -211,6 +217,8 @@ Some CSS technics may require you to change this setting to one of the following
 * **min** takes the smallest value of the main four options <sup>*</sup>
 * **rightMostElement** Loops though every element in the the DOM and finds the right most point <sup>†</sup>
 * **taggedElement** Finds the left most element with a `data-iframe-width` attribute
+
+Alternatively it is possible to add your own custom sizing method directly inside the iFrame, see [iFrame Page Options](https://github.com/davidjbradshaw/iframe-resizer#iframe-page-options) section below.
 
 <sup> † </sup> <i>The **rightMostElement** option is the most reliable way of determining the page width. However, it does have a performance impact in older versions of IE. In one screen refresh (16ms) Chrome can calculate the position of around 10,000 html nodes, whereas IE 8 can calculate approximately 50. The **taggedElement** option provides much greater performance by limiting the number of elements that need their position checked.</i>
 
@@ -287,11 +295,11 @@ This function is called once iFrame-Resizer has been initialized after receiving
 ### heightCalculationMethod / widthCalculationMethod
 
     default: null
-    type: string
+    type: string | function() { return integer }
 
 These options can be used to override the option set in the parent page (See above for details on available values). This can be useful when moving between pages in the iFrame that require different values for these options.
 
-
+Altenatively you can pass a custom function that returns the size as an integer. This can be useful when none of the standard ways of working out the size are suitable. However, normally problems with sizing are due to CSS issues and this should be looked at first.
 
 ## IFrame Page Methods
 
@@ -330,7 +338,7 @@ Ask the containing page for its positioning coordinates. You need to provide a c
 
 Your callback function will be recalled when the parent page is scrolled or resized.
 
-Pass `false` to disable the callback. 
+Pass `false` to disable the callback.
 
 ### scrollTo(x,y)
 
@@ -398,6 +406,8 @@ Solutions for the most common problems are outlined in this section. If you need
 
 Bug reports and pull requests are welcome on the [issue tracker](https://github.com/davidjbradshaw/iframe-resizer/issues). Please read the [contributing guidelines](https://github.com/davidjbradshaw/iframe-resizer/blob/master/CONTRIBUTING.md) before openning a ticket, as this will ensure a faster resolution.
 
+### Multiple IFrames on one page
+When the resizer does not work using multiple IFrames on one page, make sure that each frame has an unique id.
 
 ### IFrame not sizing correctly
 If a larger element of content is removed from the normal document flow, through the use of absolute positioning, it can prevent the browser working out the correct size of the page. In such cases you can change the [heightCalculationMethod](#heightcalculationmethod) to uses one of the other sizing methods.
@@ -485,6 +495,9 @@ It is not possible to add the required JavaScript to PDF and ODF files. However,
 ### Unexpected message received error
 By default the origin of incoming messages is checked against the `src` attribute of the iFrame. If they don't match an error is thrown. This behaviour can be disabled by setting the [checkOrigin](#checkorigin) option to **false**.
 
+### Width not resizing
+By default only changes in height are detected, if you want to calculate the width you need to set the `sizeWidth` opion to true and the `sizeHeight` option to false.
+
 
 ## Browser compatibility
 ### jQuery version
@@ -512,8 +525,11 @@ The parentIFrame methods object in the iFrame is now always available and the `e
 
 ## Version History
 
+* v3.5.6 [#438](https://github.com/davidjbradshaw/iframe-resizer/issues/438) Check jQuery pluging wrapper not already loaded. [#423](https://github.com/davidjbradshaw/iframe-resizer/issues/423) Properly remove event listeners [[Aaron Hardy](Aaronius)]. [#401](https://github.com/davidjbradshaw/iframe-resizer/issues/401) Make tagged element fall back to all elements if tag not found. [#381](https://github.com/davidjbradshaw/iframe-resizer/issues/381) Fixing disconnect when iframe is missing temporarly [[Jeff Hicken](jhicken)]. Added warnings for missing iFrame and deprecated options.
+* v3.5.5 [#373](https://github.com/davidjbradshaw/iframe-resizer/issues/373) Add option for custom size calculation methods in iFrame. [#374](https://github.com/davidjbradshaw/iframe-resizer/issues/374) Fix bug with in page links called from parent page.
+* v3.5.4 [#362](https://github.com/davidjbradshaw/iframe-resizer/issues/362) Handle jQuery being loaded in odd ways. [#297](https://github.com/davidjbradshaw/iframe-resizer/issues/297) Ensure document ready before resizing
 * v3.5.3 [#283](https://github.com/davidjbradshaw/iframe-resizer/issues/283) Added *readystatechange* event listener.
-* v3.5.2 [#314](https://github.com/davidjbradshaw/iframe-resizer/pull/314) Add iframeHeight and iframeWidth properties to pageInfo [[Pierre Olivier](https://github.com/pomartel)]. [#303](https://github.com/davidjbradshaw/iframe-resizer/issues/303) Fix issue with IE8 polyFils. 
+* v3.5.2 [#314](https://github.com/davidjbradshaw/iframe-resizer/pull/314) Add iframeHeight and iframeWidth properties to pageInfo [[Pierre Olivier](https://github.com/pomartel)]. [#303](https://github.com/davidjbradshaw/iframe-resizer/issues/303) Fix issue with IE8 polyFils.
 * v3.5.1 [#286](https://github.com/davidjbradshaw/iframe-resizer/issues/286) Fixed *taggedElement / lowestElement / rightMostElement* to calculate correct margin [[Dan Ballance](danballance)].
 * v3.5.0 Recall getPageInfo callback when parent page position changes. Added *Array.prototype.forEach* to IE8 polyfils.
 * v3.4.2 Only teardown events on close if currently enabled.

@@ -10,7 +10,7 @@
  */
 
 
-;(function(window) {
+;(function(window, undefined) {
 	'use strict';
 
 	var
@@ -51,9 +51,20 @@
 		widthCalcModeDefault  = 'scroll',
 		widthCalcMode         = widthCalcModeDefault,
 		win                   = window,
-		messageCallback       = function(){warn('MessageCallback function not defined');},
+		messageCallback       = function(){ warn('MessageCallback function not defined'); },
 		readyCallback         = function(){},
-		pageInfoCallback      = function(){};
+		pageInfoCallback      = function(){},
+		customCalcMethods     = {
+			height: function(){
+				warn('Custom height calculation function not defined');
+				return document.documentElement.offsetHeight;
+			},
+			width: function(){
+				warn('Custom width calculation function not defined');
+				return document.body.scrollWidth;
+			}
+		},
+		eventHandlersByName   = {};
 
 
 	function addEventListener(el,evt,func){
@@ -203,8 +214,20 @@
 			widthCalcMode       = ('widthCalculationMethod'  in data) ? data.widthCalculationMethod  : widthCalcMode;
 		}
 
+		function setupCustomCalcMethods(calcMode, calcFunc){
+			if ('function' === typeof calcMode) {
+				log('Setup custom ' + calcFunc + 'CalcMethod');
+				customCalcMethods[calcFunc] = calcMode;
+				calcMode = 'custom';
+			}
+
+			return calcMode;
+		}
+
 		if(('iFrameResizer' in window) && (Object === window.iFrameResizer.constructor)) {
 			readData();
+			heightCalcMode = setupCustomCalcMethods(heightCalcMode, 'height');
+			widthCalcMode  = setupCustomCalcMethods(widthCalcMode,  'width');
 		}
 
 		log('TargetOrigin for parent set to: ' + targetOriginDefault);
@@ -243,15 +266,21 @@
 
 
 	function manageTriggerEvent(options){
-		function handleEvent(){
-			sendSize(options.eventName,options.eventType);
-		}
 
 		var listener = {
 			add:    function(eventName){
+				function handleEvent(){
+					sendSize(options.eventName,options.eventType);
+				}
+
+				eventHandlersByName[eventName] = handleEvent;
+
 				addEventListener(window,eventName,handleEvent);
 			},
 			remove: function(eventName){
+				var handleEvent = eventHandlersByName[eventName];
+				delete eventHandlersByName[eventName];
+
 				removeEventListener(window,eventName,handleEvent);
 			}
 		};
@@ -727,12 +756,14 @@
 	function getTaggedElements(side,tag){
 		function noTaggedElementsFound(){
 			warn('No tagged elements ('+tag+') found on page');
-			return height; //current height
+			return document.querySelectorAll('body *');
 		}
 
 		var elements = document.querySelectorAll('['+tag+']');
 
-		return 0 === elements.length ?  noTaggedElementsFound() : getMaxElement(side,elements);
+		if (0 === elements.length) noTaggedElementsFound();
+
+		return getMaxElement(side,elements);
 	}
 
 	function getAllElements(){
@@ -751,6 +782,10 @@
 
 			bodyScroll: function getBodyScrollHeight(){
 				return document.body.scrollHeight;
+			},
+
+			custom: function getCustomWidth(){
+				return customCalcMethods.height();
 			},
 
 			documentElementOffset: function getDEOffsetHeight(){
@@ -789,6 +824,10 @@
 
 			bodyOffset: function getBodyOffsetWidth(){
 				return document.body.offsetWidth;
+			},
+
+			custom: function getCustomWidth(){
+				return customCalcMethods.width();
 			},
 
 			documentElementScroll: function getDEScrollWidth(){
@@ -949,35 +988,61 @@
 	}
 
 	function receiver(event) {
+		var processRequestFromParent = {
+			init: function initFromParent(){
+				function fireInit(){
+					initMsg = event.data;
+					target  = event.source;
+
+					init();
+					firstRun = false;
+					setTimeout(function(){ initLock = false;},eventCancelTimer);
+				}
+
+				if (document.body){
+					fireInit();
+				} else {
+					log('Waiting for page ready');
+					addEventListener(window,'readystatechange',processRequestFromParent.initFromParent);
+				}
+			},
+
+			reset: function resetFromParent(){
+				if (!initLock){
+					log('Page size reset by host page');
+					triggerReset('resetPage');
+				} else {
+					log('Page reset ignored by init');
+				}
+			},
+
+			resize: function resizeFromParent(){
+				sendSize('resizeParent','Parent window requested size check');
+			},
+
+			moveToAnchor: function moveToAnchorF(){
+				inPageLinks.findTarget(getData());
+			},
+			inPageLink: function inPageLinkF() {this.moveToAnchor();}, //Backward compatability
+
+			pageInfo: function pageInfoFromParent(){
+				var msgBody = getData();
+				log('PageInfoFromParent called from parent: ' + msgBody );
+				pageInfoCallback(JSON.parse(msgBody));
+				log(' --');
+			},
+
+			message: function messageFromParent(){
+				var msgBody = getData();
+
+				log('MessageCallback called from parent: ' + msgBody );
+				messageCallback(JSON.parse(msgBody));
+				log(' --');
+			}
+		};
+
 		function isMessageForUs(){
 			return msgID === (''+event.data).substr(0,msgIdLen); //''+ Protects against non-string messages
-		}
-
-		function initFromParent(){
-			initMsg = event.data;
-			target  = event.source;
-
-			init();
-			firstRun = false;
-			setTimeout(function(){ initLock = false;},eventCancelTimer);
-		}
-
-		function resetFromParent(){
-			if (!initLock){
-				log('Page size reset by host page');
-				triggerReset('resetPage');
-			} else {
-				log('Page reset ignored by init');
-			}
-		}
-
-		function resizeFromParent(){
-			sendSize('resizeParent','Parent window requested size check');
-		}
-
-		function moveToAnchor(){
-			var anchor = getData();
-			inPageLinks.findTarget(anchor);
 		}
 
 		function getMessageType(){
@@ -992,21 +1057,6 @@
 			return ('iFrameResize' in window);
 		}
 
-		function messageFromParent(){
-			var msgBody = getData();
-
-			log('MessageCallback called from parent: ' + msgBody );
-			messageCallback(JSON.parse(msgBody));
-			log(' --');
-		}
-
-		function pageInfoFromParent(){
-			var msgBody = getData();
-			log('PageInfoFromParent called from parent: ' + msgBody );
-			pageInfoCallback(JSON.parse(msgBody));
-			log(' --');
-		}
-
 		function isInitMsg(){
 			//Test if this message is from a child below us. This is an ugly test, however, updating
 			//the message format would break backwards compatibity.
@@ -1014,26 +1064,12 @@
 		}
 
 		function callFromParent(){
-			switch (getMessageType()){
-			case 'reset':
-				resetFromParent();
-				break;
-			case 'resize':
-				resizeFromParent();
-				break;
-			case 'moveToAnchor':
-				moveToAnchor();
-				break;
-			case 'message':
-				messageFromParent();
-				break;
-			case 'pageInfo':
-				pageInfoFromParent();
-				break;
-			default:
-				if (!isMiddleTier() && !isInitMsg()){
-					warn('Unexpected message ('+event.data+')');
-				}
+			var messageType = getMessageType();
+
+			if (messageType in processRequestFromParent){
+				processRequestFromParent[messageType]();
+			} else if (!isMiddleTier() && !isInitMsg()){
+				warn('Unexpected message ('+event.data+')');
 			}
 		}
 
@@ -1041,7 +1077,7 @@
 			if (false === firstRun) {
 				callFromParent();
 			} else if (isInitMsg()) {
-				initFromParent();
+				processRequestFromParent.init();
 			} else {
 				log('Ignored message of type "' + getMessageType() + '". Received before initialization.');
 			}
