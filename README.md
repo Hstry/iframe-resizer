@@ -1,7 +1,9 @@
 # iFrame Resizer
 [![NPM version](https://badge.fury.io/js/iframe-resizer.svg)](http://badge.fury.io/js/iframe-resizer)
 [![Bower version](https://badge.fury.io/bo/iframe-resizer.svg)](http://badge.fury.io/bo/iframe-resizer)
+[![NPM Downloads](https://img.shields.io/npm/dt/iframe-resizer.svg)](https://www.npmjs.com/package/iframe-resizer)
 [![Build Status](https://travis-ci.org/davidjbradshaw/iframe-resizer.svg?branch=master)](https://travis-ci.org/davidjbradshaw/iframe-resizer)
+[![Known Vulnerabilities](https://snyk.io/test/github/davidjbradshaw/iframe-resizer/badge.svg)](https://snyk.io/test/github/davidjbradshaw/iframe-resizer)
 [![Coverage Status](https://coveralls.io/repos/davidjbradshaw/iframe-resizer/badge.svg?branch=master&service=github)](https://coveralls.io/github/davidjbradshaw/iframe-resizer)
 
 This library enables the automatic resizing of the height and width of both same and cross domain iFrames to fit their contained content. It provides a range of features to address the most common issues with using iFrames, these include:
@@ -21,7 +23,7 @@ This library enables the automatic resizing of the height and width of both same
 
 ### Install
 
-This package can be installed via NPM (`npm install iframe-resizer -save`) or Bower (`bower install iframe-resizer`).
+This package can be installed via NPM (`npm install iframe-resizer -save`), Yarn (`yarn add iframe-resizer`) or Bower (`bower install iframe-resizer`).
 
 ### Getting started
 The package contains two minified JavaScript files in the [js](js) folder. The first ([iframeResizer.min.js](https://raw.githubusercontent.com/davidjbradshaw/iframe-resizer/master/js/iframeResizer.min.js)) is for the page hosting the iFrames. It can be called with **native** JavaScript;
@@ -44,8 +46,8 @@ The normal configuration is to have the iFrame resize when the browser window ch
 
 ```html
 <style>iframe{width:100%}</style>
-<iframe src="http://anotherdomain.com/iframe.html" scrolling="no"></iframe>
-<script>iFrameResize({log:true})</script>
+<iframe id="myIframe" src="http://anotherdomain.com/iframe.html" scrolling="no"></iframe>
+<script>iFrameResize({log:true}, '#myIframe')</script>
 ```
 
 Note that scrolling is set to 'no' in the iFrame tag, as older versions of IE don't allow this to be turned off in code and can just slightly add a bit of extra space to the bottom of the content that it doesn't report when it returns the height. If you have problems, check the [troubleshooting](#troubleshooting) section below.
@@ -172,7 +174,7 @@ Listen for resize events from the parent page, or the iFrame. Select the 'child'
 ### scrolling
 
     default: false
-    type:    boolean
+    type:    boolean | 'auto'
 
 Enable scroll bars in iFrame.
 
@@ -525,7 +527,14 @@ The parentIFrame methods object in the iFrame is now always available and the `e
 
 ## Version History
 
-* v3.5.6 [#438](https://github.com/davidjbradshaw/iframe-resizer/issues/438) Check jQuery pluging wrapper not already loaded. [#423](https://github.com/davidjbradshaw/iframe-resizer/issues/423) Properly remove event listeners [[Aaron Hardy](Aaronius)]. [#401](https://github.com/davidjbradshaw/iframe-resizer/issues/401) Make tagged element fall back to all elements if tag not found. [#381](https://github.com/davidjbradshaw/iframe-resizer/issues/381) Fixing disconnect when iframe is missing temporarly [[Jeff Hicken](jhicken)]. Added warnings for missing iFrame and deprecated options.
+* v3.5.14 [#477](https://github.com/davidjbradshaw/iframe-resizer/issues/477) Fix bug when iFrame closed before first resize.
+* v3.5.13 [#473](https://github.com/davidjbradshaw/iframe-resizer/issues/473) Improve no response from iFrame warning message.
+* v3.5.12 [#475](https://github.com/davidjbradshaw/iframe-resizer/issues/475) Delay resizeCallback until after the iFrame has resized [[Codener](codener)].
+* v3.5.11 [#470](https://github.com/davidjbradshaw/iframe-resizer/issues/470) Fix jQuery reference error [[Russell Schick](rschick)].
+* v3.5.10 [#461](https://github.com/davidjbradshaw/iframe-resizer/issues/461) Don't run for server-side render
+* v3.5.9 Show warning message if no response from iFrame. [#463](https://github.com/davidjbradshaw/iframe-resizer/issues/463) Suppress warning message when code loaded via module [[Sergey Pereskokov](SerjoPepper)].
+* v3.5.8 [#315](https://github.com/davidjbradshaw/iframe-resizer/issues/315) Allow Scrolling to be set to 'auto'.
+* v3.5.7 [#438](https://github.com/davidjbradshaw/iframe-resizer/issues/438) Check jQuery pluging wrapper not already loaded. [#423](https://github.com/davidjbradshaw/iframe-resizer/issues/423) Properly remove event listeners [[Aaron Hardy](Aaronius)]. [#401](https://github.com/davidjbradshaw/iframe-resizer/issues/401) Make tagged element fall back to all elements if tag not found. [#381](https://github.com/davidjbradshaw/iframe-resizer/issues/381) Fixing disconnect when iframe is missing temporarly [[Jeff Hicken](jhicken)]. Added warnings for missing iFrame and deprecated options.
 * v3.5.5 [#373](https://github.com/davidjbradshaw/iframe-resizer/issues/373) Add option for custom size calculation methods in iFrame. [#374](https://github.com/davidjbradshaw/iframe-resizer/issues/374) Fix bug with in page links called from parent page.
 * v3.5.4 [#362](https://github.com/davidjbradshaw/iframe-resizer/issues/362) Handle jQuery being loaded in odd ways. [#297](https://github.com/davidjbradshaw/iframe-resizer/issues/297) Ensure document ready before resizing
 * v3.5.3 [#283](https://github.com/davidjbradshaw/iframe-resizer/issues/283) Added *readystatechange* event listener.
@@ -602,7 +611,7 @@ The parentIFrame methods object in the iFrame is now always available and the `e
 
 
 ## License
-Copyright &copy; 2013-15 [David J. Bradshaw](https://github.com/davidjbradshaw).
+Copyright &copy; 2013-17 [David J. Bradshaw](https://github.com/davidjbradshaw).
 Licensed under the [MIT License](LICENSE).
 
 [![NPM](https://nodei.co/npm/iframe-resizer.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/iframe-resizer/)
