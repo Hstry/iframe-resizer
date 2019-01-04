@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="utf-8">
   <title>QUnit LoadHide</title>
   <link rel="stylesheet" href="resources/qunit.css">
 </head>
+
 <body>
   <div id="qunit"></div>
   <div id="qunit-fixture">
@@ -26,49 +28,49 @@
 
     var MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
 
-    function mutationObserverTest(){ 
-      asyncTest( "iFrame late image load", function() {
+    function mutationObserverTest() {
+      asyncTest("iFrame late image load", function () {
 
         var callbackCounter = 0;
 
         $('iframe').iFrameResize({
           //log:true,
-          sizeHeight:false,
-          sizeWidth:true,
-          interval:1,
-          resizedCallback:function(messageData){
-            switch  (''+(++callbackCounter)){
+          sizeHeight: false,
+          sizeWidth: true,
+          interval: 1,
+          resizedCallback: function (messageData) {
+            switch ('' + (++callbackCounter)) {
               case '1':
                 sendMessage('image');
                 break;
               case '2':
                 break;
               case '3':
-                ok( 'imageLoad' === messageData.type, 'type = imageLoad');
+                ok('imageLoad' === messageData.type, 'type = imageLoad');
                 start();
             }
           }
         });
       });
 
-      asyncTest( "iFrame late image load with other mutations", function() {
+      asyncTest("iFrame late image load with other mutations", function () {
 
         var callbackCounter = 0;
 
         $('iframe').iFrameResize({
           //log:true,
-          sizeHeight:false,
-          sizeWidth:true,
-          interval:1,
-          resizedCallback:function(messageData){
-            switch  (''+(++callbackCounter)){
+          sizeHeight: false,
+          sizeWidth: true,
+          interval: 1,
+          resizedCallback: function (messageData) {
+            switch ('' + (++callbackCounter)) {
               case '1':
                 sendMessage('imageAsSecondMutation');
                 break;
               case '2':
                 break;
               case '3':
-                ok( 'imageLoad' === messageData.type, 'type = imageLoad');
+                ok('imageLoad' === messageData.type, 'type = imageLoad');
                 start();
             }
           }
@@ -76,15 +78,16 @@
       });
     }
 
-    if (MutationObserver)
-      mutationObserverTest()
-    else{
-      console.warn('(MutationObserver not supported in this browser! Unable to run test)');
-      test('iFrame MutationObserver',function(){
-        ok(true,'MutationObserver not supported in this browser! Unable to run test.');
-      });
-    }
+    // if (MutationObserver)
+    //   mutationObserverTest()
+    // else{
+    //   console.warn('(MutationObserver not supported in this browser! Unable to run test)');
+    //   test('iFrame MutationObserver',function(){
+    //     ok(true,'MutationObserver not supported in this browser! Unable to run test.');
+    //   });
+    // }
 
   </script>
 </body>
+
 </html>
