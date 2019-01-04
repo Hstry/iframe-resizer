@@ -324,6 +324,13 @@
         ['scroll', 'resize'].forEach(function(evt) {
           log(id, type + evt + ' listener for sendPageInfo');
           func(window, evt, sendPageInfo);
+
+          // This is an exception just for Manhattan Institute
+          // See https://mail.google.com/mail/u/0/#search/josh/15c1c10286eb2c4d
+          var scrollers = document.getElementsByClassName('scroller');
+          if (scrollers.length > 0) {
+            func(scrollers[0], evt, sendPageInfo);
+          }
         });
       }
 
@@ -1292,12 +1299,5 @@
     createJQueryPublicMethod(window.jQuery);
   }
 
-  if (typeof define === 'function' && define.amd) {
-    define([], factory);
-  } else if (typeof module === 'object' && typeof module.exports === 'object') {
-    //Node for browserfy
-    module.exports = factory();
-  } else {
-    window.iFrameResize = window.iFrameResize || factory();
-  }
+  window.iFrameResize = window.iFrameResize || factory();
 })();
